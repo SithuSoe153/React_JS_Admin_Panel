@@ -9,11 +9,7 @@ import MainLayout from "./layouts/MainLayout"; // Assuming these paths
 export const router = createBrowserRouter([
   {
     path: "/login",
-    element: (
-      <MinimalLayout>
-        <LoginForm />
-      </MinimalLayout>
-    ),
+    element: <LoginForm />,
   },
   {
     path: "/",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Paper,
   Button,
@@ -43,6 +43,10 @@ const RoleList = () => {
     navigate(`/role-create/${role}`);
   };
 
+  const handleCreateRole = (index) => {
+    navigate('/role-create');
+  };
+
   return (
     <>
       {/* Tabs */}
@@ -69,6 +73,7 @@ const RoleList = () => {
           variant="contained"
           color="primary"
           startIcon={<AddIcon />}
+          onClick={handleCreateRole}
           sx={{ mt: 2 }}
         >
           Create New Role

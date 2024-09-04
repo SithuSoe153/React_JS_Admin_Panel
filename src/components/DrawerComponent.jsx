@@ -11,6 +11,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
 
@@ -33,7 +34,7 @@ const DrawerComponent = ({ open, onClose, variant }) => {
         "& .MuiDrawer-paper": {
           width: 240,
           boxSizing: "border-box",
-          top: { sm: 64, xs: 0 },
+          top: 64,
           zIndex: (theme) => theme.zIndex.drawer + 1,
         },
       }}
@@ -43,35 +44,17 @@ const DrawerComponent = ({ open, onClose, variant }) => {
         <List>
           <ListItem onClick={handleCollapseClick}>
             <ListItemIcon>
-              <LocalShippingIcon />
+              <AdminPanelSettingsIcon />
             </ListItemIcon>
-
-            <ListItemText primary="Way management" />
+            <ListItemText primary="Create Role" />
             {openCollapse ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </ListItem>
           <Collapse in={openCollapse} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItem component="a" href="/way_pickup_list/All">
-                <ListItemText primary="Pickup ways" />
+                <ListItemText primary="Data Set" />
               </ListItem>
-              <ListItem component="a" href="/way_delivery_list/All">
-                <ListItemText primary="Deliver ways" />
-              </ListItem>
-              <ListItem component="a" href="/way_delivery_failed_list">
-                <ListItemText primary="Failed ways" />
-              </ListItem>
-              <ListItem component="a" href="/way_delivery_return_list">
-                <ListItemText primary="Return ways" />
-              </ListItem>
-              <ListItem component="a" href="/way_delivery_route_list">
-                <ListItemText primary="Parcel In/Out" />
-              </ListItem>
-              <ListItem component="a" href="/way_transit_list/All">
-                <ListItemText primary="Transit route" />
-              </ListItem>
-              <ListItem component="a" href="/way_tracking">
-                <ListItemText primary="Tracking map" />
-              </ListItem>
+             
             </List>
           </Collapse>
         </List>

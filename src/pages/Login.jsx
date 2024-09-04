@@ -16,7 +16,6 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
 
   const handleLogin = () => {
-    // Add login logic here
     console.log("Username:", username);
     console.log("Password:", password);
   };
@@ -29,7 +28,7 @@ const LoginForm = () => {
         justifyContent="center"
         sx={{ height: "100%" }}
       >
-        <Grid item xs={12} sm={8} md={6} lg={4} xl={3}>
+        <Grid item xs={12} sm={10} md={8} lg={6} xl={5}>
           <Card>
             <CardContent>
               <Grid
