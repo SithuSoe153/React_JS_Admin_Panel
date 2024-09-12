@@ -7,6 +7,7 @@ import {
   ListItemText,
   Divider,
   Collapse,
+  Button,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -14,8 +15,20 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
+import { useNavigate } from "react-router-dom";
+import AuthService from "../services/AuthService";
+import { useCookies } from "react-cookie";
 
 const DrawerComponent = ({ open, onClose, variant }) => {
+  const [, , removeCookie] = useCookies(["access_token", "refresh_token"]);
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    AuthService.logout(removeCookie);
+    navigate("/login");
+  };
+
   const [openCollapse, setOpenCollapse] = useState(true);
 
   const handleCollapseClick = () => {
@@ -34,13 +47,13 @@ const DrawerComponent = ({ open, onClose, variant }) => {
         "& .MuiDrawer-paper": {
           width: 240,
           boxSizing: "border-box",
-          top: 64,
+          top: 64, // Ensures it's below the app bar
           zIndex: (theme) => theme.zIndex.drawer + 1,
         },
       }}
     >
       <div>
-        <Divider />
+        {/* <Divider /> */}
         <List>
           <ListItem onClick={handleCollapseClick}>
             <ListItemIcon>
@@ -54,26 +67,46 @@ const DrawerComponent = ({ open, onClose, variant }) => {
               <ListItem component="a" href="/way_pickup_list/All">
                 <ListItemText primary="Data Set" />
               </ListItem>
-             
             </List>
           </Collapse>
         </List>
-        <Divider />
+        {/* <Divider /> */}
         <List>
           <ListItem component="a" href="/toc.html" target="_blank">
-            <ListItemIcon>
-              <VerifiedIcon />
-            </ListItemIcon>
-            <ListItemText primary="Terms & Conditions" />
+            <div style={{ flexGrow: 1 }}>
+              <Button
+                startIcon={<VerifiedIcon />}
+                sx={{
+                  // textTransform: "none",
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  color: "black",
+                  "& .MuiSvgIcon-root": {
+                    color: "black",
+                  },
+                }}
+              >
+                Dashboard
+              </Button>
+            </div>
           </ListItem>
         </List>
-        <Divider />
+        {/* <Divider /> */}
         <List>
           <ListItem>
-            <ListItemIcon>
-              <PowerSettingsNewIcon />
-            </ListItemIcon>
-            <ListItemText primary="Logout" />
+            <div style={{ flexGrow: 1 }}>
+              <Button
+                onClick={handleLogout}
+                startIcon={<PowerSettingsNewIcon />}
+                sx={{
+                  // textTransform: "none",
+                  justifyContent: "flex-start",
+                  width: "100%",
+                }}
+              >
+                Logout
+              </Button>
+            </div>
           </ListItem>
         </List>
       </div>

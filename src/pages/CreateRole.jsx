@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from "react";
-
-import { RoleService } from "../services/data-services";
-
 import {
   Card,
   CardHeader,
@@ -10,85 +7,110 @@ import {
   FormControlLabel,
   Checkbox,
   TextField,
-  Autocomplete,
   Divider,
   CardActions,
   Button,
   IconButton,
-  Typography,
-  SvgIcon,
   Container,
+  Tooltip,
+  Collapse,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import ClearIcon from "@mui/icons-material/Clear";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import CheckIcon from "@mui/icons-material/Check";
+import {
+  ExpandMore as ExpandMoreIcon,
+  Close as CloseIcon,
+  Check as CheckIcon,
+} from "@mui/icons-material";
+import { RoleService, PrivilegeService } from "../services/data-services";
 import { useParams } from "react-router-dom";
 
 const CreateRole = () => {
   const { guid } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [roleName, setRoleName] = useState("");
-  const [userGroup, setUserGroup] = useState("Management and Operation Group");
-  const [permissions, setPermissions] = useState({
-    accountingBalanceDownload: false,
-    accountingCreate: false,
-    userVisibleMerchants: false,
-    zoneUpdate: false,
+  const [privileges, setPrivileges] = useState([]);
+  const [selectedPermissions, setSelectedPermissions] = useState({});
+  const [createPrivilegeOpen, setCreatePrivilegeOpen] = useState(false); // Toggle for creating a new privilege
+  const [newPrivilege, setNewPrivilege] = useState({
+    name: "",
+    description: "",
+    displayName: "",
   });
 
+  useEffect(() => {
+    const fetchPrivileges = async () => {
+      try {
+        const fetchedPrivileges = await RoleService.getPrivileges();
+        setPrivileges(fetchedPrivileges);
+
+        if (guid) {
+          const response = await RoleService.getRole(guid);
+          if (response.success && Array.isArray(response.data.items)) {
+            const rolePrivileges = response.data.items;
+            if (rolePrivileges.length > 0) {
+              setRoleName(rolePrivileges[0].roleName);
+            }
+            const selectedPermissions = {};
+            rolePrivileges.forEach((priv) => {
+              selectedPermissions[priv.privilegeGuid] = true;
+            });
+            setSelectedPermissions(selectedPermissions);
+          }
+        }
+        setIsLoading(false);
+      } catch (error) {
+        setError(error.message);
+        setIsLoading(false);
+      }
+    };
+
+    fetchPrivileges();
+  }, [guid]);
+
   const handlePermissionChange = (event) => {
-    setPermissions({
-      ...permissions,
+    setSelectedPermissions({
+      ...selectedPermissions,
       [event.target.name]: event.target.checked,
     });
   };
 
-  const handleSave = () => {
-    // Handle the save logic here
-    console.log("Role Name:", roleName);
-    console.log("User Group:", userGroup);
-    console.log("Permissions:", permissions);
+  const handleSave = async () => {
+    const roleData = {
+      name: roleName,
+      privilegeGuid: Object.keys(selectedPermissions).filter(
+        (key) => selectedPermissions[key]
+      ),
+    };
+
+    try {
+      if (guid) {
+        await RoleService.updateRole(guid, roleData);
+        alert("Role updated successfully!");
+      } else {
+        await RoleService.createRole(roleData);
+        alert("Role created successfully!");
+      }
+    } catch (error) {
+      alert("Failed to save role: " + error.message);
+    }
   };
 
-  // useEffect(() => {
-  //   if (guid) {
-  //     // Fetch data only if guid is present
-  //     setIsLoading(true);
-  //     RoleService.fetchRole(guid)
-  //       .then((data) => {
-  //         setRoleData(data);
-  //         setIsLoading(false);
-  //       })
-  //       .catch((err) => {
-  //         setError(err.message); // Handle error message
-  //         setIsLoading(false);
-  //       });
-  //   }
-  // }, [guid]);
-
-  // if (isLoading) {
-  //   return <div>Loading...</div>;
-  // }
-
-  // if (error) {
-  //   return <div>Error: {error}</div>;
-  // }
-
-  // if (!roleData) {
-  //   return <div>No role data available</div>;
-  // }
+  const handleCreatePrivilege = async () => {
+    try {
+      await PrivilegeService.createPrivilege(newPrivilege);
+      alert("Privilege created successfully!");
+      // Re-fetch privileges after creating a new one
+      const fetchedPrivileges = await RoleService.getPrivileges();
+      setPrivileges(fetchedPrivileges);
+      // Clear the new privilege form
+      setNewPrivilege({ name: "", description: "", displayName: "" });
+    } catch (error) {
+      alert("Failed to create privilege: " + error.message);
+    }
+  };
 
   return (
-    <Container
-      style={{
-        // marginLeft: isSmUp ? 240 : 0,
-        marginTop: 64,
-        padding: "20px",
-      }}
-    >
+    <>
       <Card elevation={1}>
         <CardHeader
           avatar={
@@ -96,66 +118,29 @@ const CreateRole = () => {
               <CloseIcon />
             </IconButton>
           }
-          title="Create a new Role"
-          subheader="Role means that the group of privileges/permissions which will be applied to the users!"
+          title={guid ? "Update Role" : "Create a new Role"}
+          subheader="A role is a set of privileges assigned to users."
         />
         <CardContent>
           <Grid container spacing={1}>
-            <Grid item xs={6} md={4}>
-              <FormControlLabel
-                title="top management level"
-                control={
-                  <Checkbox
-                    checked={permissions.accountingBalanceDownload}
-                    onChange={handlePermissionChange}
-                    name="accountingBalanceDownload"
-                    color="primary"
+            {privileges.map((privilege) => (
+              <Grid item xs={6} md={4} key={privilege.privilegeGuid}>
+                <Tooltip title={privilege.privilegeDescription}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={!!selectedPermissions[privilege.privilegeGuid]}
+                        onChange={handlePermissionChange}
+                        name={privilege.privilegeGuid}
+                        color="primary"
+                      />
+                    }
+                    label={privilege.privilegeDisplayName}
                   />
-                }
-                label="User Read"
-              />
-            </Grid>
-            <Grid item xs={6} md={4}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={permissions.accountingCreate}
-                    onChange={handlePermissionChange}
-                    name="accountingCreate"
-                    color="primary"
-                  />
-                }
-                label="Admin Read"
-              />
-            </Grid>
-            <Grid item xs={6} md={4}>
-              <FormControlLabel
-                title="user level"
-                control={
-                  <Checkbox
-                    checked={permissions.userVisibleMerchants}
-                    onChange={handlePermissionChange}
-                    name="userVisibleMerchants"
-                    color="primary"
-                  />
-                }
-                label="Admin Write"
-              />
-            </Grid>
-            <Grid item xs={6} md={4}>
-              <FormControlLabel
-                title="top management level"
-                control={
-                  <Checkbox
-                    checked={permissions.zoneUpdate}
-                    onChange={handlePermissionChange}
-                    name="zoneUpdate"
-                    color="primary"
-                  />
-                }
-                label="Admin Delete"
-              />
-            </Grid>
+                </Tooltip>
+              </Grid>
+            ))}
+
             <Grid item xs={12} md={12}>
               <TextField
                 id="roleName"
@@ -168,26 +153,71 @@ const CreateRole = () => {
                 onChange={(e) => setRoleName(e.target.value)}
               />
             </Grid>
-            <Grid item xs={12} md={12}>
-              <Autocomplete
-                id="roleGroup"
-                options={["Management and Operation Group", "Another Group"]}
-                value={userGroup}
-                onChange={(event, newValue) => setUserGroup(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="User Group"
-                    required
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                  />
-                )}
-              />
-            </Grid>
           </Grid>
         </CardContent>
+
+        {/* Section to create a new privilege */}
+        <CardContent>
+          <Button
+            onClick={() => setCreatePrivilegeOpen(!createPrivilegeOpen)}
+            endIcon={<ExpandMoreIcon />}
+            aria-expanded={createPrivilegeOpen}
+          >
+            {createPrivilegeOpen
+              ? "Close New Privilege"
+              : "Create New Privilege"}
+          </Button>
+          <Collapse in={createPrivilegeOpen} timeout="auto" unmountOnExit>
+            <Grid container spacing={2} sx={{ marginTop: 2 }}>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Privilege Name"
+                  fullWidth
+                  value={newPrivilege.name}
+                  onChange={(e) =>
+                    setNewPrivilege({ ...newPrivilege, name: e.target.value })
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Display Name"
+                  fullWidth
+                  value={newPrivilege.displayName}
+                  onChange={(e) =>
+                    setNewPrivilege({
+                      ...newPrivilege,
+                      displayName: e.target.value,
+                    })
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Description"
+                  fullWidth
+                  multiline
+                  value={newPrivilege.description}
+                  onChange={(e) =>
+                    setNewPrivilege({
+                      ...newPrivilege,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </Grid>
+            </Grid>
+            <Button
+              onClick={handleCreatePrivilege}
+              variant="contained"
+              color="primary"
+              sx={{ marginTop: 2 }}
+            >
+              Save New Privilege
+            </Button>
+          </Collapse>
+        </CardContent>
+
         <Divider />
         <CardActions>
           <Button
@@ -197,11 +227,11 @@ const CreateRole = () => {
             onClick={handleSave}
             endIcon={<CheckIcon />}
           >
-            Save
+            {guid ? "Update Role" : "Save"}
           </Button>
         </CardActions>
       </Card>
-    </Container>
+    </>
   );
 };
 

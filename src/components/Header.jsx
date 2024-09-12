@@ -8,14 +8,20 @@ import {
   Avatar,
   useTheme,
   useMediaQuery,
+  Tooltip,
+  Box,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import DrawerComponent from "./DrawerComponent";
+import { Cookies, useCookies } from "react-cookie";
 
 const Header = ({ onMenuClick }) => {
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
+
+  const [cookies] = useCookies(["user_info"]);
+
+  // let username = cookies.user_info.name;
 
   return (
     <AppBar
@@ -40,16 +46,26 @@ const Header = ({ onMenuClick }) => {
           <img
             alt="MyDay Admin Panel"
             src="/vite.svg"
-            style={{ width: "40px" }}
+            sx={{
+              width: "40px",
+              display: { xs: "none", sm: "block" },
+            }}
           />
         </a>
         <Typography
-          variant="h4"
+          variant="h5"
           color="inherit"
-          style={{ flexGrow: 1, marginLeft: "16px" }}
+          sx={{
+            display: { xs: "none", sm: "block" },
+            flexGrow: 1,
+            marginLeft: "16px",
+          }}
         >
           MyDay Admin Panel
         </Typography>
+
+        <Box sx={{ flexGrow: 1 }} />
+
         <Button
           color="inherit"
           aria-haspopup="true"
@@ -57,18 +73,34 @@ const Header = ({ onMenuClick }) => {
             <img
               alt="Language"
               src="https://upload.wikimedia.org/wikipedia/commons/8/83/Flag_of_the_United_Kingdom_%283-5%29.svg"
-              style={{ width: "24px", marginRight: "4px" }}
+              style={{ width: "24px",
+              }}
             />
           }
           endIcon={<ArrowDropDownIcon />}
-          style={{ textTransform: "none" }}
+          sx={{
+            textTransform: "none",
+            marginRight: "16px",
+          }}
         >
-          English
+          <Typography
+            variant="h7"
+            color="inherit"
+            sx={{ display: { xs: "none", sm: "block" } }}
+          >
+            English
+          </Typography>
         </Button>
-        <Avatar
-          src="/vite.svg"
-          style={{ cursor: "pointer", marginLeft: "16px" }}
-        />
+
+        {/* <Tooltip title={username}> */}
+        <Tooltip >
+          <Avatar
+            src="/user.jpg"
+            sx={{
+              cursor: "pointer",
+            }}
+          />
+        </Tooltip>
       </Toolbar>
     </AppBar>
   );

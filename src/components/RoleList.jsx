@@ -13,38 +13,78 @@ import {
   IconButton,
   Tabs,
   Tab,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Visibility as VisibilityIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { RoleService } from "../services/data-services"; // Import the API call
 
 const RoleList = () => {
   const [tabIndex, setTabIndex] = useState(0);
-  const [roles, setRoles] = useState([
-    { name: "Administrator", active: true },
-    { name: "Manager", active: true },
-    { name: "Customer Service", active: false },
-    { name: "Finance", active: true },
-    { name: "Custom role", active: false },
-  ]);
-
+  const [roles, setRoles] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null); // Store selected role for confirmation
+  const [newActiveStatus, setNewActiveStatus] = useState(null); // Store the new active status
   const navigate = useNavigate();
 
-  const handleToggle = (index) => {
-    const newRoles = roles.map((role, i) =>
-      i === index ? { ...role, active: !role.active } : role
-    );
-    setRoles(newRoles);
+  useEffect(() => {
+    // Fetch roles data on component mount
+    RoleService.getRoles()
+      .then((data) => {
+        setRoles(data);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch roles:", error);
+      });
+  }, []);
+
+  // Handle switch toggle to show confirmation dialog
+  const handleToggle = (guid, index) => {
+    const role = roles[index];
+    const updatedStatus = !role.roleActive; // Toggle current active status
+    setSelectedRole({ guid, index });
+    setNewActiveStatus(updatedStatus);
+    setDialogOpen(true); // Open the confirmation dialog
+  };
+
+  // Confirm status change
+  const handleConfirmToggle = async () => {
+    const { guid, index } = selectedRole;
+
+    try {
+      // Update the active status in the backend via the RoleService
+      await RoleService.updateActiveStatus(guid, newActiveStatus);
+
+      // Update the local state after successful backend update
+      const updatedRoles = roles.map((role, i) =>
+        i === index ? { ...role, roleActive: newActiveStatus } : role
+      );
+      setRoles(updatedRoles);
+    } catch (error) {
+      console.error("Failed to update active status:", error);
+    }
+
+    setDialogOpen(false); // Close the dialog after confirmation
   };
 
   const handleViewPermissions = (role) => {
     navigate(`/role-create/${role}`);
   };
 
-  const handleCreateRole = (index) => {
-    navigate('/role-create');
+  const handleCreateRole = () => {
+    navigate("/role-create");
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false); // Close dialog without confirming
   };
 
   return (
@@ -79,7 +119,14 @@ const RoleList = () => {
           Create New Role
         </Button>
 
-        <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            mt: 2,
+            width: "100%",
+            overflowX: "auto",
+          }}
+        >
           <Table>
             <TableHead>
               <TableRow>
@@ -91,19 +138,18 @@ const RoleList = () => {
             <TableBody>
               {roles.map((role, index) => (
                 <TableRow key={index}>
-                  <TableCell>{role.name}</TableCell>
+                  <TableCell>{role.roleName}</TableCell>
                   <TableCell>
                     <Switch
-                      checked={role.active}
-                      onChange={() => handleToggle(index)}
+                      checked={role.roleActive}
+                      onChange={() => handleToggle(role.roleGuid, index)}
+                      disabled={!role.roleEditable} // Disable switch if not editable
                     />
                   </TableCell>
                   <TableCell>
                     <IconButton
                       title="View permission list"
-                      onClick={() =>
-                        handleViewPermissions("sasjdfm-asdfsdesdf-q2dads")
-                      }
+                      onClick={() => handleViewPermissions(role.roleGuid)}
                     >
                       <VisibilityIcon />
                     </IconButton>
@@ -114,6 +160,25 @@ const RoleList = () => {
           </Table>
         </TableContainer>
       </Paper>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={dialogOpen} onClose={handleDialogClose}>
+        <DialogTitle>Confirm Change</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to{" "}
+            {newActiveStatus ? "activate" : "deactivate"} this role?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmToggle} color="primary" autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

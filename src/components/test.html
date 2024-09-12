@@ -1,56 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+6f4e3755-dfa9-41b2-b5e8-eb940500d263
 
-const CreateRole = () => {
-  const { guid } = useParams();
-  const [roleData, setRoleData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (guid) {
-      // Fetch data only if guid is present
-      setIsLoading(true);
-      fetch(`/api/roles/${guid}`)
-        .then((response) => response.json())
-        .then((data) => {
-          setRoleData(data);
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          setError(err);
-          setIsLoading(false);
-        });
-    }
-  }, [guid]);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
 
-  return (
-    <div>
-      {guid ? (
-        <div>
-          <h1>Edit Role</h1>
-          {/* Display role data */}
-          {roleData ? (
-            <div>
-              <h2>{roleData.name}</h2>
-              <p>{roleData.description}</p>
-              {/* Add form to edit role and privileges */}
-            </div>
-          ) : (
-            <div>Role not found</div>
-          )}
-        </div>
-      ) : (
-        <div>
-          <h1>Create New Role</h1>
-          {/* Add form to create new role */}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default CreateRole;
+getRoles(): Fetches all roles.
+getRole(guid): Fetches a specific role based on GUID, including the associated privileges.
+getPrivileges(): Fetches all privileges.
+createRole(roleData): Creates a new role with the provided data.
+updateRole(guid, roleData): Updates an existing role based on GUID with the new data.

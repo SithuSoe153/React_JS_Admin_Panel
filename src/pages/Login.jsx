@@ -10,14 +10,36 @@ import {
   Typography,
   Divider,
 } from "@mui/material";
+import { useCookies } from "react-cookie";
+import { useNavigate } from "react-router-dom";
+import AuthService from "../services/AuthService";
 
 const LoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [cookies, setCookie] = useCookies(["access_token", "refresh_token"]);
+  const navigate = useNavigate();
 
   const handleLogin = () => {
-    console.log("Username:", username);
-    console.log("Password:", password);
+    AuthService.login(username, password)
+      .then(({ accessToken, refreshToken }) => {
+        setCookie("access_token", accessToken, { path: "/" });
+        setCookie("refresh_token", refreshToken, { path: "/" });
+
+        return AuthService.getUserInfo(accessToken);
+      })
+      .then((userInfoResponse) => {
+        if (userInfoResponse.success) {
+          const userInfo = userInfoResponse.data;
+          setCookie("user_info", JSON.stringify(userInfo), { path: "/" });
+          navigate("/dashboard");
+        } else {
+          console.error("Failed to fetch user info");
+        }
+      })
+      .catch((err) => {
+        console.error("Login failed or fetching user info failed:", err);
+      });
   };
 
   return (
